@@ -7,9 +7,11 @@ extern crate ndarray_rand;
 
 use std::hash::{Hash, Hasher};
 use rand::distributions::Uniform;
-use ndarray::{Array1, Array2, ArrayView1, Ix1, iter::Lanes};
+use ndarray::{ArrayView1, Ix1, iter::Lanes};
 use ndarray_rand::RandomExt;
 use crc::crc64::checksum_ecma;
+
+pub use ndarray::{Array1, Array2, arr1, arr2};
 
 use state::{StateRow, StateGrid, enumerate_row_states, common_row_indexes, filter_invalid_row_states};
 
