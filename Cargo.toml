@@ -1,7 +1,9 @@
 [package]
 name = "nonogram"
 version = "0.1.0"
+description = "Nonogram generation and solution package"
 authors = ["Joe Grosspietsch <joe.grosspietsch@gmail.com>"]
+license = "MIT"
 edition = "2018"
 
 [dependencies]
