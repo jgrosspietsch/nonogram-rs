@@ -3,6 +3,8 @@ name = "nonogram"
 version = "0.1.0"
 description = "Nonogram generation and solution package"
 authors = ["Joe Grosspietsch <joe.grosspietsch@gmail.com>"]
+documentation = "https://docs.rs/nonogram"
+repository = "https://github.com/jgrosspietsch/nonogram-rs"
 license = "MIT"
 edition = "2018"
 
