@@ -4,12 +4,16 @@ extern crate crc;
 extern crate rand;
 extern crate ndarray;
 extern crate ndarray_rand;
+extern crate serde;
+extern crate serde_json;
 
 use std::hash::{Hash, Hasher};
 use rand::distributions::Uniform;
 use ndarray::{ArrayView1, Ix1, iter::Lanes};
 use ndarray_rand::RandomExt;
 use crc::crc64::checksum_ecma;
+use serde::{Serialize, Deserialize};
+use serde_json::{Error as JsonError};
 
 pub use ndarray::{Array1, Array2, arr1, arr2};
 
@@ -149,6 +153,21 @@ impl Nonogram {
 
         checksum_ecma(aggregate.as_slice())
     }
+
+    /// Serializes the nonogram as json so that we don't need to use serde every time we need to use it
+    pub fn as_json(&self) -> Result<String, JsonError> {
+        serde_json::to_string(&SerializedNonogram::from_nonogram(self))
+    }
+
+    pub fn from_json(serialized: &String) -> Result<Nonogram, String> {
+        match serde_json::from_str::<SerializedNonogram>(serialized) {
+            Ok(deserialized) => match deserialized.to_nonogram() {
+                Ok(nonogram) => Ok(nonogram),
+                Err(e) => Err(e.to_string())
+            },
+            Err(e) => Err(e.to_string())
+        }
+    }
 }
 
 impl Hash for Nonogram {
@@ -156,5 +175,47 @@ impl Hash for Nonogram {
         self.height().hash(state);
         self.width().hash(state);
         self.generate_checksum().hash(state);
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+struct SerializedNonogram {
+    checksum: u64,
+    height: usize,
+    width: usize,
+    row_segments: Vec<Vec<usize>>,
+    column_segments: Vec<Vec<usize>>,
+    completed_grid: Vec<Vec<u8>>
+}
+
+impl SerializedNonogram {
+    fn from_nonogram(original: &Nonogram) -> SerializedNonogram {
+        SerializedNonogram {
+            checksum: original.generate_checksum(),
+            height: original.height(),
+            width: original.width(),
+            row_segments: original.row_segments.iter().cloned().collect(),
+            column_segments: original.column_segments.iter().cloned().collect(),
+            completed_grid: original.completed_grid.genrows()
+                .into_iter()
+                .map(|row| row.iter().cloned().collect())
+                .collect()
+        }
+    }
+
+    fn to_nonogram(&self) -> Result<Nonogram, String> {
+        let grid = Array2::from_shape_vec(
+            (self.height, self.width),
+            self.completed_grid.iter().flatten().cloned().collect()
+        );
+        
+        match grid {
+            Ok(grid_array) => Ok(Nonogram {
+                row_segments: arr1(self.row_segments.as_slice()),
+                column_segments: arr1(self.column_segments.as_slice()),
+                completed_grid: grid_array
+            }),
+            Err(e) => Err(e.to_string())
+        }
     }
 }
