@@ -18,6 +18,18 @@ fn random_generation_works() {
 }
 
 #[test]
+fn mismatched_dimensions_work() {
+    let puzzle1 = Nonogram::generate(5, 10).solvable();
+    let puzzle2 = Nonogram::generate(15, 5).solvable();
+    let puzzle3 = Nonogram::generate(10, 20).solvable();
+
+    assert!(puzzle1 || !puzzle1);
+    assert!(puzzle2 || !puzzle2);
+    assert!(puzzle3 || !puzzle3);
+}
+
+
+#[test]
 fn detects_not_solvable() {
     let puzzle = Nonogram {
         row_segments: arr1(&[

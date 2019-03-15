@@ -78,11 +78,11 @@ impl Nonogram {
     /// method returns false. Otherwise it reaches the conclusion of the puzzle and returns true.
     pub fn solvable(&self) -> bool {
         let mut row_possibilities: Vec<Vec<StateRow>> = self.row_segments.iter()
-            .map(|clue| enumerate_row_states(self.completed_grid.dim().0, &clue))
+            .map(|clue| enumerate_row_states(self.width(), &clue))
             .collect();
 
         let mut column_possibilities: Vec<Vec<StateRow>> = self.column_segments.iter()
-            .map(|clue| enumerate_row_states(self.completed_grid.dim().1, &clue))
+            .map(|clue| enumerate_row_states(self.height(), &clue))
             .collect();
 
         let mut grid = StateGrid::new(self.height(), self.width());
@@ -92,7 +92,6 @@ impl Nonogram {
 
             for (index, possibilities) in row_possibilities.iter_mut().enumerate() {
                 let common = common_row_indexes(&possibilities);
-
 
                 for cell in &common {
                     if let Some(current_cell) = grid.get(index, cell.0) {
@@ -157,7 +156,7 @@ impl Nonogram {
         serde_json::to_string(&SerializedNonogram::from_nonogram(self))
     }
 
-    pub fn from_json(serialized: &String) -> Result<Nonogram, String> {
+    pub fn from_json(serialized: &str) -> Result<Nonogram, String> {
         match serde_json::from_str::<SerializedNonogram>(serialized) {
             Ok(deserialized) => match deserialized.to_nonogram() {
                 Ok(nonogram) => Ok(nonogram),
