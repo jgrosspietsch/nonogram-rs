@@ -21,14 +21,15 @@ use state::{StateRow, StateGrid, enumerate_row_states, common_row_indexes, filte
 
 fn build_clue(row: ArrayView1<u8>) -> Vec<usize> {
     let mut clue: Vec<usize> = Vec::new();
-
-    if let Some(row_slice) = row.as_slice() {
-        row_slice.split(|cell| *cell == 0u8).for_each(|segment| {
+        
+    row.into_iter()
+        .cloned()
+        .collect::<Vec<u8>>()
+        .split(|cell| *cell == 0u8).for_each(|segment| {
             if !segment.is_empty() {
                 clue.push(segment.len());
             }
         });
-    }
 
     clue
 }
@@ -92,7 +93,6 @@ impl Nonogram {
             for (index, possibilities) in row_possibilities.iter_mut().enumerate() {
                 let common = common_row_indexes(&possibilities);
 
-                println!("common for row {:?}: {:?}", index, common);
 
                 for cell in &common {
                     if let Some(current_cell) = grid.get(index, cell.0) {
@@ -103,11 +103,9 @@ impl Nonogram {
                     }
                 }
 
-                println!("grid row {:?}: {:?}", index, grid.get_row(index));
 
                 let filtered_possibilities = filter_invalid_row_states(&grid.get_row(index), &possibilities);
 
-                println!("filtered possibilities {:?}", filtered_possibilities);
                 changes += possibilities.len() - filtered_possibilities.len();
                 *possibilities = filtered_possibilities;
             }
