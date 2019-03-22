@@ -1,6 +1,6 @@
 [package]
 name = "nonogram"
-version = "0.2.2"
+version = "0.3.0"
 description = "Nonogram generation and solution package"
 authors = ["Joe Grosspietsch <joe.grosspietsch@gmail.com>"]
 documentation = "https://docs.rs/nonogram"
