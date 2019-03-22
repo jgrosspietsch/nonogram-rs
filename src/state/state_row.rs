@@ -1,8 +1,7 @@
 extern crate ndarray;
 
-use ndarray::{Array1, arr1};
 use super::CellState;
-
+use ndarray::{arr1, Array1};
 
 #[derive(Eq, Clone, Debug, PartialEq, Hash)]
 pub struct StateRow(pub Array1<CellState>);
@@ -26,8 +25,8 @@ impl StateRow {
                 }
 
                 Some(self.append(&appended_seg))
-            },
-            None => None
+            }
+            None => None,
         }
     }
 
@@ -40,17 +39,15 @@ impl StateRow {
     }
 
     pub fn state_at_index(&self, index: usize) -> Option<CellState> {
-        self.0.iter()
-            .cloned()
-            .nth(index)
+        self.0.iter().cloned().nth(index)
     }
 
     fn append(&self, appended: &[CellState]) -> StateRow {
         let mut known_portion = self.0.to_vec();
-        
+
         known_portion.truncate(match self.last_known() {
             Some(n) => n + 1,
-            None => 0
+            None => 0,
         });
 
         for &i in appended.iter() {
@@ -68,12 +65,12 @@ impl StateRow {
 
     fn last_known(&self) -> Option<usize> {
         if !self.0.is_empty() && self.0[0] != CellState::Unknown {
-            Some(self.0.iter().fold(0, |acc, cell| {
-                match cell {
+            Some(
+                self.0.iter().fold(0, |acc, cell| match cell {
                     CellState::Unknown => acc,
-                    _ => acc + 1
-                }
-            }) - 1)
+                    _ => acc + 1,
+                }) - 1,
+            )
         } else {
             None
         }
@@ -83,16 +80,16 @@ impl StateRow {
         match self.last_known() {
             Some(n) => match self.state_at_index(n) {
                 Some(state) => state == CellState::Empty,
-                None => false
+                None => false,
             },
-            None => true
+            None => true,
         }
     }
 
     fn remaining_cells(&self) -> usize {
         match self.last_known() {
             Some(index) => self.0.len() - (index + 1),
-            None => self.0.len()
+            None => self.0.len(),
         }
     }
 
@@ -100,13 +97,13 @@ impl StateRow {
         let mut used: Vec<usize> = Vec::new();
 
         if let Some(row_slice) = self.0.as_slice() {
-            row_slice.split(|&cell| {
-                cell == CellState::Empty || cell == CellState::Unknown
-            }).for_each(|segment| {
-                if !segment.is_empty() {
-                    used.push(segment.len());
-                }
-            });
+            row_slice
+                .split(|&cell| cell == CellState::Empty || cell == CellState::Unknown)
+                .for_each(|segment| {
+                    if !segment.is_empty() {
+                        used.push(segment.len());
+                    }
+                });
         }
 
         used
@@ -120,10 +117,7 @@ impl StateRow {
     }
 
     fn next_segment(&self, clue: &[usize]) -> Option<usize> {
-        self.remaining_segments(clue)
-            .iter()
-            .cloned()
-            .nth(0)
+        self.remaining_segments(clue).iter().cloned().nth(0)
     }
 
     fn required_cells(&self, clue: &[usize]) -> usize {
@@ -131,10 +125,20 @@ impl StateRow {
 
         if !remaining_segs.is_empty() {
             let segment_cells: usize = remaining_segs.iter().sum();
-            let spaces_required = if !remaining_segs.is_empty() { remaining_segs.len() - 1 } else { 0 };
+            let spaces_required = if !remaining_segs.is_empty() {
+                remaining_segs.len() - 1
+            } else {
+                0
+            };
             let leading_space = match self.last_known() {
-                Some(n) => if self.0[n] == CellState::Filled { 1 } else { 0 }
-                None => 0
+                Some(n) => {
+                    if self.0[n] == CellState::Filled {
+                        1
+                    } else {
+                        0
+                    }
+                }
+                None => 0,
             };
 
             segment_cells + spaces_required + leading_space
@@ -146,8 +150,8 @@ impl StateRow {
 
 #[cfg(test)]
 mod tests {
+    use super::{CellState, StateRow};
     use ndarray::arr1;
-    use super::{StateRow, CellState};
 
     #[test]
     fn row_is_known_false1() {
@@ -163,7 +167,7 @@ mod tests {
             CellState::Filled,
             CellState::Unknown,
             CellState::Empty,
-            CellState::Unknown
+            CellState::Unknown,
         ]));
 
         assert!(!row.is_known());
@@ -176,7 +180,7 @@ mod tests {
             CellState::Filled,
             CellState::Filled,
             CellState::Empty,
-            CellState::Filled
+            CellState::Filled,
         ]));
 
         assert!(row.is_known());
@@ -189,7 +193,7 @@ mod tests {
             CellState::Filled,
             CellState::Filled,
             CellState::Empty,
-            CellState::Unknown
+            CellState::Unknown,
         ]));
 
         let expected = StateRow(arr1(&[
@@ -197,7 +201,7 @@ mod tests {
             CellState::Filled,
             CellState::Filled,
             CellState::Empty,
-            CellState::Filled
+            CellState::Filled,
         ]));
 
         assert_eq!(row.new_w_appended_seg(&[3, 1]).unwrap(), expected);
@@ -210,7 +214,7 @@ mod tests {
             CellState::Filled,
             CellState::Filled,
             CellState::Unknown,
-            CellState::Unknown
+            CellState::Unknown,
         ]));
 
         let expected = StateRow(arr1(&[
@@ -218,7 +222,7 @@ mod tests {
             CellState::Filled,
             CellState::Filled,
             CellState::Empty,
-            CellState::Filled
+            CellState::Filled,
         ]));
 
         assert_eq!(row.new_w_appended_seg(&[3, 1]).unwrap(), expected);
@@ -231,7 +235,7 @@ mod tests {
             CellState::Empty,
             CellState::Filled,
             CellState::Unknown,
-            CellState::Unknown
+            CellState::Unknown,
         ]));
 
         assert!(row.new_w_appended_seg(&[1, 1]).is_none());
@@ -244,7 +248,7 @@ mod tests {
             CellState::Unknown,
             CellState::Unknown,
             CellState::Unknown,
-            CellState::Unknown
+            CellState::Unknown,
         ]));
 
         let expected = StateRow(arr1(&[
@@ -252,7 +256,7 @@ mod tests {
             CellState::Empty,
             CellState::Unknown,
             CellState::Unknown,
-            CellState::Unknown
+            CellState::Unknown,
         ]));
 
         assert_eq!(row.new_w_appended_zero(&[1, 1]).unwrap(), expected);
@@ -265,7 +269,7 @@ mod tests {
             CellState::Unknown,
             CellState::Unknown,
             CellState::Unknown,
-            CellState::Unknown
+            CellState::Unknown,
         ]));
 
         assert!(row.new_w_appended_zero(&[1, 3]).is_none());
@@ -278,7 +282,7 @@ mod tests {
             CellState::Filled,
             CellState::Empty,
             CellState::Filled,
-            CellState::Unknown
+            CellState::Unknown,
         ]));
 
         assert_eq!(row.state_at_index(2).unwrap(), CellState::Empty);
@@ -293,7 +297,7 @@ mod tests {
             CellState::Filled,
             CellState::Empty,
             CellState::Filled,
-            CellState::Unknown
+            CellState::Unknown,
         ]));
 
         assert!(row.state_at_index(5).is_none());

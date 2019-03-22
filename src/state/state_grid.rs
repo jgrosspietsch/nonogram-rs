@@ -1,7 +1,7 @@
 extern crate ndarray;
 
-use ndarray::Array2;
 use super::{CellState, StateRow};
+use ndarray::Array2;
 
 pub struct StateGrid(Array2<CellState>);
 
@@ -17,7 +17,7 @@ impl StateGrid {
     }
 
     pub fn get(&self, i: usize, j: usize) -> Option<&CellState> {
-        self.0.get((i,j))
+        self.0.get((i, j))
     }
 
     pub fn get_row(&self, i: usize) -> StateRow {
@@ -35,8 +35,8 @@ impl StateGrid {
 
 #[cfg(test)]
 mod tests {
+    use super::{CellState, StateGrid, StateRow};
     use ndarray::arr1;
-    use super::{StateGrid, StateRow, CellState};
 
     #[test]
     fn new_grid_with_dimensions() {
@@ -97,13 +97,16 @@ mod tests {
         grid.set(2, 2, CellState::Filled);
         grid.set(4, 2, CellState::Empty);
 
-        assert_eq!(grid.get_column(2), StateRow(arr1(&[
-            CellState::Unknown,
-            CellState::Unknown,
-            CellState::Filled,
-            CellState::Unknown,
-            CellState::Empty
-        ])));
+        assert_eq!(
+            grid.get_column(2),
+            StateRow(arr1(&[
+                CellState::Unknown,
+                CellState::Unknown,
+                CellState::Filled,
+                CellState::Unknown,
+                CellState::Empty
+            ]))
+        );
     }
 
     #[test]
@@ -113,13 +116,16 @@ mod tests {
         grid.set(3, 1, CellState::Filled);
         grid.set(3, 3, CellState::Empty);
 
-        assert_eq!(grid.get_row(3), StateRow(arr1(&[
-            CellState::Unknown,
-            CellState::Filled,
-            CellState::Unknown,
-            CellState::Empty,
-            CellState::Unknown
-        ])));
+        assert_eq!(
+            grid.get_row(3),
+            StateRow(arr1(&[
+                CellState::Unknown,
+                CellState::Filled,
+                CellState::Unknown,
+                CellState::Empty,
+                CellState::Unknown
+            ]))
+        );
     }
 
     #[test]

@@ -28,31 +28,18 @@ fn mismatched_dimensions_work() {
     assert!(puzzle3 || !puzzle3);
 }
 
-
 #[test]
 fn detects_not_solvable() {
     let puzzle = Nonogram {
-        row_segments: arr1(&[
-            vec![],
-            vec![1],
-            vec![],
-            vec![1],
-            vec![]
-        ]),
-        column_segments: arr1(&[
-            vec![],
-            vec![1],
-            vec![],
-            vec![1],
-            vec![]
-        ]),
+        row_segments: arr1(&[vec![], vec![1], vec![], vec![1], vec![]]),
+        column_segments: arr1(&[vec![], vec![1], vec![], vec![1], vec![]]),
         completed_grid: arr2(&[
             [0, 0, 0, 0, 0],
             [0, 1, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 1, 0],
-            [0, 0, 0, 0, 0]
-        ])
+            [0, 0, 0, 0, 0],
+        ]),
     };
 
     assert!(!puzzle.solvable())
@@ -61,27 +48,15 @@ fn detects_not_solvable() {
 #[test]
 fn detects_solvable() {
     let puzzle = Nonogram {
-        row_segments: arr1(&[
-            vec![],
-            vec![1, 1],
-            vec![],
-            vec![1, 1],
-            vec![]
-        ]),
-        column_segments: arr1(&[
-            vec![],
-            vec![1, 1],
-            vec![],
-            vec![1, 1],
-            vec![]
-        ]),
+        row_segments: arr1(&[vec![], vec![1, 1], vec![], vec![1, 1], vec![]]),
+        column_segments: arr1(&[vec![], vec![1, 1], vec![], vec![1, 1], vec![]]),
         completed_grid: arr2(&[
             [0, 0, 0, 0, 0],
             [0, 1, 0, 1, 0],
             [0, 0, 0, 0, 0],
             [0, 1, 0, 1, 0],
-            [0, 0, 0, 0, 0]
-        ])
+            [0, 0, 0, 0, 0],
+        ]),
     };
 
     assert!(puzzle.solvable())

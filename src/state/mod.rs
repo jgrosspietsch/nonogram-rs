@@ -1,10 +1,10 @@
 extern crate ndarray;
 
-use std::collections::{HashSet, VecDeque};
 use ndarray::Array1;
+use std::collections::{HashSet, VecDeque};
 
-mod state_row;
 mod state_grid;
+mod state_row;
 
 pub use state_grid::StateGrid;
 pub use state_row::StateRow;
@@ -13,11 +13,13 @@ pub use state_row::StateRow;
 pub enum CellState {
     Unknown,
     Empty,
-    Filled
+    Filled,
 }
 
 impl Default for CellState {
-    fn default() -> Self { CellState::Unknown }
+    fn default() -> Self {
+        CellState::Unknown
+    }
 }
 
 pub fn enumerate_row_states(size: usize, clue: &[usize]) -> Vec<StateRow> {
@@ -43,12 +45,24 @@ pub fn enumerate_row_states(size: usize, clue: &[usize]) -> Vec<StateRow> {
     known_rows.iter().cloned().collect()
 }
 
-pub fn filter_invalid_row_states(known_row: &StateRow, previous_states: &[StateRow]) -> Vec<StateRow> {
-    previous_states.iter().cloned().filter(|state_row| {
-        known_row.0.iter().zip(state_row.0.iter()).all(|(known_cell, state_cell)| {
-            *known_cell == CellState::Unknown || (*known_cell != CellState::Unknown && known_cell == state_cell)
+pub fn filter_invalid_row_states(
+    known_row: &StateRow,
+    previous_states: &[StateRow],
+) -> Vec<StateRow> {
+    previous_states
+        .iter()
+        .cloned()
+        .filter(|state_row| {
+            known_row
+                .0
+                .iter()
+                .zip(state_row.0.iter())
+                .all(|(known_cell, state_cell)| {
+                    *known_cell == CellState::Unknown
+                        || (*known_cell != CellState::Unknown && known_cell == state_cell)
+                })
         })
-    }).collect()
+        .collect()
 }
 
 pub fn common_row_indexes(states: &[StateRow]) -> Vec<(usize, CellState)> {
@@ -60,26 +74,30 @@ pub fn common_row_indexes(states: &[StateRow]) -> Vec<(usize, CellState)> {
             match state.0[i] {
                 CellState::Empty => common_empty[i] += 1,
                 CellState::Filled => common_filled[i] += 1,
-                _ => ()
+                _ => (),
             };
         }
     }
 
-    (0..states[0].0.len()).filter_map(|index| {
-        if common_empty[index] == states.len() {
-            Some((index, CellState::Empty))
-        } else if common_filled[index] == states.len() {
-            Some((index, CellState::Filled))
-        } else {
-            None
-        }
-    }).collect()
+    (0..states[0].0.len())
+        .filter_map(|index| {
+            if common_empty[index] == states.len() {
+                Some((index, CellState::Empty))
+            } else if common_filled[index] == states.len() {
+                Some((index, CellState::Filled))
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 #[cfg(test)]
 mod tests {
+    use super::{
+        common_row_indexes, enumerate_row_states, filter_invalid_row_states, CellState, StateRow,
+    };
     use ndarray::arr1;
-    use super::{enumerate_row_states, filter_invalid_row_states, common_row_indexes, StateRow, CellState};
 
     #[test]
     fn enumerate_row_states1() {
@@ -123,7 +141,7 @@ mod tests {
             CellState::Empty,
             CellState::Unknown,
             CellState::Empty,
-            CellState::Unknown
+            CellState::Unknown,
         ]));
         let enumerated_states = enumerate_row_states(5, &[1, 1]);
         let filtered_states = filter_invalid_row_states(&known, &enumerated_states);
@@ -138,7 +156,7 @@ mod tests {
             CellState::Unknown,
             CellState::Filled,
             CellState::Unknown,
-            CellState::Empty
+            CellState::Empty,
         ]));
         let enumerated_states = enumerate_row_states(5, &[2]);
         let filtered_states = filter_invalid_row_states(&known, &enumerated_states);
@@ -153,7 +171,7 @@ mod tests {
             CellState::Unknown,
             CellState::Filled,
             CellState::Unknown,
-            CellState::Empty
+            CellState::Empty,
         ]));
         let enumerated_states = enumerate_row_states(5, &[3]);
         let filtered_states = filter_invalid_row_states(&known, &enumerated_states);
