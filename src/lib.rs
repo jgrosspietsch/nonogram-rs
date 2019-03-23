@@ -41,7 +41,7 @@ fn build_clues(grid: Lanes<u8, Ix1>) -> Array1<Vec<usize>> {
     grid.into_iter().map(build_clue).collect()
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Nonogram {
     pub row_segments: Array1<Vec<usize>>,
     pub column_segments: Array1<Vec<usize>>,
