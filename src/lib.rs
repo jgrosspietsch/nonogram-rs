@@ -216,7 +216,7 @@ impl<'de> Deserialize<'de> for Nonogram {
 
 #[derive(Serialize, Deserialize)]
 struct SerializedNonogram {
-    checksum: u64,
+    checksum: String,
     height: usize,
     width: usize,
     row_segments: Vec<Vec<usize>>,
@@ -227,7 +227,7 @@ struct SerializedNonogram {
 impl SerializedNonogram {
     fn from_nonogram(original: &Nonogram) -> SerializedNonogram {
         SerializedNonogram {
-            checksum: original.generate_checksum(),
+            checksum: original.generate_checksum().to_string(),
             height: original.height(),
             width: original.width(),
             row_segments: original.row_segments.iter().cloned().collect(),
