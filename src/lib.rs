@@ -1,9 +1,5 @@
-mod state;
+mod solution;
 
-extern crate crc;
-extern crate ndarray;
-extern crate ndarray_rand;
-extern crate rand;
 extern crate serde;
 extern crate serde_json;
 
@@ -16,10 +12,6 @@ use serde_json::Error as JsonError;
 use std::hash::{Hash, Hasher};
 
 pub use ndarray::{arr1, arr2, Array1, Array2};
-
-use state::{
-    common_row_indexes, enumerate_row_states, filter_invalid_row_states, StateGrid, StateRow,
-};
 
 fn build_clue(row: ArrayView1<u8>) -> Vec<usize> {
     let mut clue: Vec<usize> = Vec::new();
@@ -37,14 +29,14 @@ fn build_clue(row: ArrayView1<u8>) -> Vec<usize> {
     clue
 }
 
-fn build_clues(grid: Lanes<u8, Ix1>) -> Array1<Vec<usize>> {
+fn build_clues(grid: Lanes<u8, Ix1>) -> Vec<Vec<usize>> {
     grid.into_iter().map(build_clue).collect()
 }
 
 #[derive(Debug, Clone)]
 pub struct Nonogram {
-    pub row_segments: Array1<Vec<usize>>,
-    pub column_segments: Array1<Vec<usize>>,
+    pub row_segments: Vec<Vec<usize>>,
+    pub column_segments: Vec<Vec<usize>>,
     pub completed_grid: Array2<u8>,
 }
 
@@ -78,69 +70,7 @@ impl Nonogram {
     /// This method attempts to programmatically solve the puzzle. If it reaches a dead-end the
     /// method returns false. Otherwise it reaches the conclusion of the puzzle and returns true.
     pub fn solvable(&self) -> bool {
-        let mut row_possibilities: Vec<Vec<StateRow>> = self
-            .row_segments
-            .iter()
-            .map(|clue| enumerate_row_states(self.width(), &clue))
-            .collect();
-
-        let mut column_possibilities: Vec<Vec<StateRow>> = self
-            .column_segments
-            .iter()
-            .map(|clue| enumerate_row_states(self.height(), &clue))
-            .collect();
-
-        let mut grid = StateGrid::new(self.height(), self.width());
-
-        loop {
-            let mut changes = 0;
-
-            for (index, possibilities) in row_possibilities.iter_mut().enumerate() {
-                let common = common_row_indexes(&possibilities);
-
-                for cell in &common {
-                    if let Some(current_cell) = grid.get(index, cell.0) {
-                        if *current_cell != cell.1 {
-                            grid.set(index, cell.0, cell.1);
-                            changes += 1;
-                        }
-                    }
-                }
-
-                let filtered_possibilities =
-                    filter_invalid_row_states(&grid.get_row(index), &possibilities);
-
-                changes += possibilities.len() - filtered_possibilities.len();
-                *possibilities = filtered_possibilities;
-            }
-
-            for (index, possibilities) in column_possibilities.iter_mut().enumerate() {
-                let common = common_row_indexes(&possibilities);
-
-                for cell in &common {
-                    if let Some(current_cell) = grid.get(cell.0, index) {
-                        if *current_cell != cell.1 {
-                            grid.set(cell.0, index, cell.1);
-                            changes += 1;
-                        }
-                    }
-                }
-
-                let filtered_possibilities =
-                    filter_invalid_row_states(&grid.get_column(index), &possibilities);
-
-                changes += possibilities.len() - filtered_possibilities.len();
-                *possibilities = filtered_possibilities;
-            }
-
-            if changes == 0 {
-                break false;
-            }
-
-            if grid.is_known() {
-                break true;
-            }
-        }
+        solution::has_single_solution(&self.row_segments, &self.column_segments)
     }
 
     /// Generates a checksum for quickly determining equivalence between puzzles of
@@ -249,8 +179,8 @@ impl SerializedNonogram {
 
         match grid {
             Ok(grid_array) => Ok(Nonogram {
-                row_segments: arr1(self.row_segments.as_slice()),
-                column_segments: arr1(self.column_segments.as_slice()),
+                row_segments: self.row_segments.clone(),
+                column_segments: self.column_segments.clone(),
                 completed_grid: grid_array,
             }),
             Err(e) => Err(e.to_string()),

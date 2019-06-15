@@ -1,5 +1,3 @@
-extern crate ndarray;
-
 use ndarray::Array1;
 use std::collections::{HashSet, VecDeque};
 
@@ -22,22 +20,60 @@ impl Default for CellState {
     }
 }
 
-pub fn enumerate_row_states(size: usize, clue: &[usize]) -> Vec<StateRow> {
-    let mut queue: VecDeque<StateRow> = VecDeque::new();
-    let mut known_rows: HashSet<StateRow> = HashSet::new();
+// https://math.stackexchange.com/questions/1462099/number-of-possible-combinations-of-x-numbers-that-sum-to-y
+fn total_possible_rows(available: usize, segments: usize) -> usize {
+    let dividend = (available + 1..=(available + segments)).product();
+    let divisor = (1..=segments).product();
 
-    queue.push_back(StateRow(Array1::default(size)));
+    dividend / divisor
+}
 
-    while let Some(row) = queue.pop_front() {
-        if row.is_known() {
-            known_rows.insert(row);
+// fn row_matches_clue(row: &[bool], clue: &[usize]) -> bool {
+//     row.split(|cell| cell == true)
+//         .filter_map(|seg| if seg.len() > 0 { Some(l) } else { None })
+//         .eq(clue)
+// }
+
+fn space_width_to_row_segments(segments: &[usize], spaces: &[usize]) -> Vec<(usize, usize)> {
+    let segment_iter = segments.into_iter();
+    let spaces_iter = spaces.into_iter();
+    let mut row_segs = Vec::with_capacity(segments.len());
+
+    for (i, seg) in segment_iter.enumerate() {
+        if i == 0 {
+            row_segs.push((spaces[0], spaces[0] + seg));
         } else {
-            if let Some(seg_row) = row.new_w_appended_seg(clue) {
-                queue.push_front(seg_row);
-            }
+            row_segs.push((
+                spaces[i] + row_segs[i - 1].1,
+                spaces[i] + row_segs[i - 1].1 + seg,
+            ));
+        }
+    }
 
-            if let Some(zero_row) = row.new_w_appended_zero(clue) {
-                queue.push_front(zero_row);
+    row_segs
+}
+
+pub fn enumerate_row_states(size: usize, clue: &[usize]) -> Vec<Vec<(usize, usize)>> {
+    let available_spaces = size - clue.iter().sum() - (clue.len() - 1);
+    let space_segments = clue.len() + 1;
+    let num_possible = total_possible_rows(available_spaces, space_segments);
+    let mut queue: VecDeque<Vec<usize>> = VecDeque::with_capacity(num_possible);
+    let mut known_rows: HashSet<Vec<(usize, usize)>> = HashSet::with_capacity(num_possible);
+
+    queue.push_front(Vec::<usize>::with_capacity(space_segments));
+
+    while let Some(row_spaces) = queue.pop_front() {
+        let remaining_available = row_spaces.iter().sum();
+
+        if row_spaces.len() == space_segments - 1 {
+            row_spaces.push(remaining_available);
+            known_rows.insert(space_width_to_row_segments(clue, &row_spaces));
+        } else {
+            for seg in 0..remaining_available {
+                let new_row = row_spaces.clone();
+                new_row.push(seg);
+
+                queue.push_front(new_row);
             }
         }
     }
@@ -47,7 +83,7 @@ pub fn enumerate_row_states(size: usize, clue: &[usize]) -> Vec<StateRow> {
 
 pub fn filter_invalid_row_states(
     known_row: &StateRow,
-    previous_states: &[StateRow],
+    previous_states: &[&[(usize, usize)]],
 ) -> Vec<StateRow> {
     previous_states
         .iter()
@@ -65,9 +101,9 @@ pub fn filter_invalid_row_states(
         .collect()
 }
 
-pub fn common_row_indexes(states: &[StateRow]) -> Vec<(usize, CellState)> {
-    let mut common_empty: Array1<usize> = Array1::zeros(states[0].0.len());
-    let mut common_filled: Array1<usize> = Array1::zeros(states[0].0.len());
+pub fn common_row_indexes(states: &[&[(usize, usize)]]) -> Vec<(usize, CellState)> {
+    let mut common_empty: Array1<usize> = Array1::zeros(states[0].len());
+    let mut common_filled: Array1<usize> = Array1::zeros(states[0].len());
 
     for state in states {
         for i in 0..state.0.len() {
