@@ -1,7 +1,3 @@
-extern crate nonogram;
-
-extern crate ndarray;
-
 use nonogram::Nonogram;
 
 use ndarray::{arr1, arr2};
