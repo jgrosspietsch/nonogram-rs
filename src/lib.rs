@@ -1,4 +1,4 @@
-mod state;
+mod solution;
 
 extern crate crc;
 extern crate ndarray;
@@ -17,7 +17,7 @@ use std::hash::{Hash, Hasher};
 
 pub use ndarray::{arr1, arr2, Array1, Array2};
 
-use state::{
+use solution::{
     common_row_indexes, enumerate_row_states, filter_invalid_row_states, StateGrid, StateRow,
 };
 

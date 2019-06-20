@@ -3,7 +3,9 @@ extern crate ndarray;
 use ndarray::Array1;
 use std::collections::{HashSet, VecDeque};
 
+#[path = "state_grid.rs"]
 mod state_grid;
+#[path = "state_row.rs"]
 mod state_row;
 
 pub use state_grid::StateGrid;
