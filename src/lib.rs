@@ -8,7 +8,6 @@ use ndarray::{iter::Lanes, ArrayView1, Ix1};
 use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use serde_json::Error as JsonError;
 use std::hash::{Hash, Hasher};
 
 pub use ndarray::{arr1, arr2, Array1, Array2};
@@ -88,21 +87,6 @@ impl Nonogram {
 
         checksum_ecma(aggregate.as_slice())
     }
-
-    /// Serializes the nonogram as json so that we don't need to use serde every time we need to use it
-    pub fn as_json(&self) -> Result<String, JsonError> {
-        serde_json::to_string(&SerializedNonogram::from_nonogram(self))
-    }
-
-    pub fn from_json(serialized: &str) -> Result<Nonogram, String> {
-        match serde_json::from_str::<SerializedNonogram>(serialized) {
-            Ok(deserialized) => match deserialized.to_nonogram() {
-                Ok(nonogram) => Ok(nonogram),
-                Err(e) => Err(e.to_string()),
-            },
-            Err(e) => Err(e.to_string()),
-        }
-    }
 }
 
 impl Hash for Nonogram {
@@ -160,8 +144,8 @@ impl SerializedNonogram {
             checksum: original.generate_checksum().to_string(),
             height: original.height(),
             width: original.width(),
-            row_segments: original.row_segments.iter().cloned().collect(),
-            column_segments: original.column_segments.iter().cloned().collect(),
+            row_segments: original.row_segments.clone(),
+            column_segments: original.column_segments.clone(),
             completed_grid: original
                 .completed_grid
                 .genrows()

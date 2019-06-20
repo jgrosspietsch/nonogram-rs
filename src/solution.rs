@@ -15,6 +15,16 @@ mod grid {
         }
     }
 
+    impl std::fmt::Display for CellState {
+        fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+            match self {
+                CellState::Unknown => write!(f, "?"),
+                CellState::Empty => write!(f, "0"),
+                CellState::Filled => write!(f, "1"),
+            }
+        }
+    }
+
     pub struct StateGrid {
         grid: Vec<CellState>,
         height: usize,
@@ -49,6 +59,17 @@ mod grid {
         pub fn is_known(&self) -> bool {
             !self.grid.iter().any(|cell| *cell == CellState::Unknown)
         }
+
+        // pub fn print_grid(&self) {
+        //     println!("Current grid state");
+        //     for (idx, cell) in self.grid.iter().enumerate() {
+        //         print!("{}", cell);
+
+        //         if (idx + 1) % self.width == 0 {
+        //             print!("\n");
+        //         }
+        //     }
+        // }
     }
 
     pub struct RowIterator<'a> {
@@ -137,15 +158,13 @@ impl Iterator for PermutationGenerator {
     type Item = RowSegments;
 
     fn next(&mut self) -> Option<Self::Item> {
-        loop {
-            if self.counter.bits() > self.size {
-                break None;
-            }
-
-            self.counter += 1u8;
-
-            break Some(split_into_segments(&self.counter.to_str_radix(2)));
+        if self.counter.bits() > self.size {
+            return None;
         }
+
+        self.counter += 1u8;
+
+        Some(split_into_segments(&self.counter.to_str_radix(2)))
     }
 }
 
@@ -181,17 +200,19 @@ fn split_into_segments(num_str: &str) -> RowSegments {
                         end = Some(idx);
                     }
                 } else {
-                    break Some(SegmentPair {
+                    let pair = SegmentPair {
                         start: start.unwrap(),
                         end: end.unwrap(),
-                    });
+                    };
+                    start = None;
+                    break Some(pair);
                 }
             }
         })
         .collect()
 }
 
-fn row_matches_clue(clue: &[usize], row: &RowSegments) -> bool {
+fn row_matches_clue(clue: &[usize], row: &[SegmentPair]) -> bool {
     clue.len() == row.len()
         && clue
             .iter()
@@ -200,7 +221,7 @@ fn row_matches_clue(clue: &[usize], row: &RowSegments) -> bool {
 }
 
 fn enumerate_possible_from_clue(clue: &[usize], size: usize) -> Vec<RowSegments> {
-    if clue.len() == 0 {
+    if clue.is_empty() {
         vec![vec![]]
     } else if clue[0] == size {
         vec![vec![SegmentPair {
@@ -219,7 +240,7 @@ fn is_in_segment(index: usize, segment: &SegmentPair) -> bool {
 }
 
 fn valid_possibility(
-    possible: &RowSegments,
+    possible: &[SegmentPair],
     grid_iter: impl Iterator<Item = grid::CellState>,
 ) -> bool {
     use grid::CellState;
@@ -231,19 +252,22 @@ fn valid_possibility(
     })
 }
 
-fn common_cells(possibilities: &Vec<RowSegments>, size: usize) -> (Vec<usize>, Vec<usize>) {
+fn common_cells(possibilities: &[RowSegments], size: usize) -> (Vec<usize>, Vec<usize>) {
     let mut common: Vec<usize> = (0..size).map(|_| 0).collect();
 
     for possibility in possibilities {
-        for idx in 0..size {
+        for (idx, cell) in common.iter_mut().enumerate().take(size) {
             if possibility.iter().any(|seg| is_in_segment(idx, seg)) {
-                common[idx] += 1;
+                *cell += 1;
             }
         }
     }
 
     (
-        common.iter().positions(|n| *n == size).collect(),
+        common
+            .iter()
+            .positions(|n| *n == possibilities.len())
+            .collect(),
         common.iter().positions(|n| *n == 0).collect(),
     )
 }
@@ -268,15 +292,15 @@ pub fn has_single_solution(row_clues: &[Vec<usize>], column_clues: &[Vec<usize>]
     loop {
         let mut changes = 0;
 
-        for i in 0..height {
-            let before = all_row_possibilities[i].len();
+        for (i, row_possibilities) in all_row_possibilities.iter_mut().enumerate() {
+            let before = row_possibilities.len();
 
-            all_row_possibilities[i]
+            row_possibilities
                 .retain(|possible_row| valid_possibility(possible_row, grid.row_iter(i)));
 
-            changes += before - all_row_possibilities[i].len();
+            changes += before - row_possibilities.len();
 
-            let (common_filled, common_empty) = common_cells(&all_row_possibilities[i], width);
+            let (common_filled, common_empty) = common_cells(&row_possibilities, width);
 
             for j in common_filled {
                 if grid.get(i, j) == CellState::Unknown {
@@ -293,15 +317,15 @@ pub fn has_single_solution(row_clues: &[Vec<usize>], column_clues: &[Vec<usize>]
             }
         }
 
-        for j in 0..width {
-            let before = all_column_possibilities[j].len();
+        for (j, column_possibilities) in all_column_possibilities.iter_mut().enumerate() {
+            let before = column_possibilities.len();
 
-            all_column_possibilities[j]
+            column_possibilities
                 .retain(|possible_column| valid_possibility(possible_column, grid.column_iter(j)));
 
-            changes += before - all_column_possibilities[j].len();
+            changes += before - column_possibilities.len();
 
-            let (common_filled, common_empty) = common_cells(&all_column_possibilities[j], height);
+            let (common_filled, common_empty) = common_cells(&column_possibilities, height);
 
             for i in common_filled {
                 if grid.get(i, j) == CellState::Unknown {
@@ -318,12 +342,10 @@ pub fn has_single_solution(row_clues: &[Vec<usize>], column_clues: &[Vec<usize>]
             }
         }
 
-        if changes == 0 {
-            break false;
-        }
-
         if grid.is_known() {
             break true;
+        } else if changes == 0 {
+            break false;
         }
     }
 }
