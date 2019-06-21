@@ -1,5 +1,3 @@
-extern crate ndarray;
-
 use ndarray::Array1;
 use std::collections::{HashSet, VecDeque};
 
@@ -7,6 +5,8 @@ use std::collections::{HashSet, VecDeque};
 mod state_grid;
 #[path = "state_row.rs"]
 mod state_row;
+#[path = "lookup.rs"]
+mod lookup;
 
 pub use state_grid::StateGrid;
 pub use state_row::StateRow;

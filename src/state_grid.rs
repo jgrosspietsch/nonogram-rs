@@ -1,5 +1,3 @@
-extern crate ndarray;
-
 use super::{CellState, StateRow};
 use ndarray::Array2;
 

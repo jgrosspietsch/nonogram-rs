@@ -1,11 +1,7 @@
-mod solution;
+#[macro_use]
+extern crate lazy_static;
 
-extern crate crc;
-extern crate ndarray;
-extern crate ndarray_rand;
-extern crate rand;
-extern crate serde;
-extern crate serde_json;
+mod solution;
 
 use crc::crc64::checksum_ecma;
 use ndarray::{iter::Lanes, ArrayView1, Ix1};
