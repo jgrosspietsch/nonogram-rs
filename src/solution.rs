@@ -1,12 +1,12 @@
 use ndarray::Array1;
 use std::collections::{HashSet, VecDeque};
 
+#[path = "lookup.rs"]
+mod lookup;
 #[path = "state_grid.rs"]
 mod state_grid;
 #[path = "state_row.rs"]
 mod state_row;
-#[path = "lookup.rs"]
-mod lookup;
 
 pub use state_grid::StateGrid;
 pub use state_row::StateRow;
